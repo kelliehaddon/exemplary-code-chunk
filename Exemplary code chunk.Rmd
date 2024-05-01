@@ -1,0 +1,108 @@
+---
+title: "Exemplary Code Chunk"
+author: "Kellie Haddon"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# load libraries
+library(tidyverse)
+library(haven)
+library(patchwork)
+library(extrafont)
+font_import()
+loadfonts(device = "win")
+
+# load data
+la = read_dta('la_turnout_basic.dta')
+```
+
+
+```{r prepare, include = FALSE}
+# prepare data
+la = la %>%
+  mutate(uc = as.character(understandingclause2))
+
+## white treatment
+white_treatment = la %>%
+  filter(year >= 1950 & year <= 1970,
+         uc == 1) %>%
+  group_by(year) %>%
+  summarize(reg_rate = mean(whiteregrate, na.rm = T))
+
+white_treatment = white_treatment %>%
+  mutate(status = 'Treated',
+         race = 'White')
+
+## white control
+white_control = la %>%
+  filter(year >= 1950 & year <= 1970,
+         uc == 0) %>%
+  group_by(year) %>%
+  summarize(reg_rate = mean(whiteregrate, na.rm = T))
+
+white_control = white_control %>%
+  mutate(status = 'Control',
+         race = 'White')
+
+## black treatment
+black_treatment = la %>%
+  filter(year >= 1950 & year <= 1970,
+         uc == 1) %>%
+  group_by(year) %>%
+  summarize(reg_rate = mean(blackregrate, na.rm = T))
+
+black_treatment = black_treatment %>%
+  mutate(status = 'Treated',
+         race = 'Black')
+
+## black control
+black_control = la %>%
+  filter(year >= 1950 & year <= 1970,
+         uc == 0) %>%
+  group_by(year) %>%
+  summarize(reg_rate = mean(blackregrate, na.rm = T))
+
+black_control = black_control %>%
+  mutate(status = 'Control',
+         race = 'Black')
+
+## combine data
+df = bind_rows(white_treatment, white_control, black_treatment, black_control)
+```
+
+I wrote this code as part of a problem set for my data analysis class (SIS 750) at the School of International Service at American University. The assignment was to replicate and then improve on Figure 2 from a paper by [Keele et al. (2021)](https://doi.org/10.1017/S0003055421000034). In this paper, Keele et al. (2021) evaluate the impact of efforts to disenfranchise African American voters in Louisiana in the 1950s and 1960s. They focus specifically on the Understanding Clause, which some parishes administered and others did not.
+
+See the code and output for my improved plot below.
+
+```{r visualization, echo=TRUE, fig.dim = c(10, 5), fig.align='center'}
+df %>%
+  ggplot(aes(x = year, y = reg_rate, color = status, shape = status, linetype = status)) +
+  facet_wrap(~ race) +
+  geom_rect(aes(xmin=1954, xmax=1965, ymin=-Inf, ymax=Inf), color = 'white', fill = 'grey95')+
+  geom_line(lwd = .7) +
+  geom_point(color = 'black') +
+  scale_shape_manual(values = c(16, 17)) +
+  scale_color_manual(values = c('orange', 'turquoise3')) +
+  scale_y_continuous(limits = c(0, 1),
+                     labels = scales::label_percent())+
+  guides(color = guide_legend(override.aes = list(size = 2))) +
+  labs(x = 'Year', y = 'Registration Rate',
+       title = 'FIGURE 2.   Proportion of Registered Voters by Race and by Understanding Clause Status. Treated \nParishes Enforced the Understanding Clause and Control Parishes Did Not',
+       caption = 'Note: Treated parishes enforced the Understanding Clause and control parishes did not. Gray shading indicates years \nwhen the Understanding Clause was potentially enforced in treated parishes.') +
+  theme_minimal() +
+  theme(legend.title = element_blank(),
+        panel.grid = element_blank(),
+        panel.border = element_rect(color = 'black', fill = NA),
+        panel.spacing = unit(2, "lines"),
+        axis.text = element_text(size = 11, color = 'black'),
+        axis.title = element_text(size = 11),
+        legend.text = element_text(size = 11),
+        strip.text.x = element_text(size = 11, face = 'bold'),
+        plot.title = element_text(face = 'bold', size = 14, hjust = 0),
+        plot.caption = element_text(size = 11, hjust = 0, face = 'italic'))
+
+```
