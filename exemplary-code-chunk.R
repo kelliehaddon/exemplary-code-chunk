@@ -1,28 +1,17 @@
----
-title: "Exemplary Code Chunk"
-author: "Kellie Haddon"
-date: "`r Sys.Date()`"
-output: pdf_document
----
+# Exemplary Code Chunk
 
-```{r setup, include = FALSE}
-#Preparation
-## Setup
-knitr::opts_chunk$set(echo = TRUE)
-
-## Load libraries
+# * Preparation * ----
+## Load libraries ----
 library(tidyverse)
 library(haven)
 library(patchwork)
 
-## Load data
+## Load data ----
 la = read_dta('la_turnout_basic.dta')
-```
 
 
-```{r prepare, include = FALSE}
-# Prepare data
-## White treatment
+# * Prepare data * ----
+## White treatment ----
 white_treatment = la %>%
   filter(year >= 1950 & year <= 1970, # filter for years of interest
          understandingclause2 == 1) %>% # filter for treatment status of interest
@@ -33,7 +22,7 @@ white_treatment = white_treatment %>%
   mutate(status = 'Treated', # create defining variables for appended data
          race = 'White')
 
-## White control
+## White control ----
 white_control = la %>%
   filter(year >= 1950 & year <= 1970,
          understandingclause2 == 0) %>%
@@ -44,7 +33,7 @@ white_control = white_control %>%
   mutate(status = 'Control',
          race = 'White')
 
-## Black treatment
+## Black treatment ----
 black_treatment = la %>%
   filter(year >= 1950 & year <= 1970,
          understandingclause2 == 1) %>%
@@ -55,7 +44,7 @@ black_treatment = black_treatment %>%
   mutate(status = 'Treated',
          race = 'Black')
 
-## Black control
+## Black control ----
 black_control = la %>%
   filter(year >= 1950 & year <= 1970,
          understandingclause2 == 0) %>%
@@ -66,16 +55,11 @@ black_control = black_control %>%
   mutate(status = 'Control',
          race = 'Black')
 
-## Combine data
+## Combine data ----
 df = bind_rows(white_treatment, white_control, black_treatment, black_control) # append data
-```
 
-I wrote this code as part of a problem set for my data analysis class (SIS 750) at the School of International Service at American University. The assignment was to replicate and then improve on Figure 2 from a paper by [Keele et al. (2021)](https://doi.org/10.1017/S0003055421000034). In this paper, Keele et al. (2021) evaluate the impact of efforts to disenfranchise African American voters in Louisiana in the 1950s and 1960s. They focus specifically on the Understanding Clause, which some parishes administered and others did not.
 
-See the code and output for my improved plot below.
-
-```{r visualization, echo=TRUE, fig.dim = c(10, 5), fig.align='center'}
-# Create plot
+# * Create plot * ----
 df %>%
   ggplot(aes(x = year, y = reg_rate, # identify independent and dependent variables
              color = status, shape = status, linetype = status)) + # create visual elements based on treatment status
@@ -103,4 +87,3 @@ df %>%
         strip.text.x = element_text(size = 11, face = 'bold'), # format titles of facets
         plot.title = element_text(face = 'bold', size = 14, hjust = 0), # format title of plot
         plot.caption = element_text(size = 11, hjust = 0, face = 'italic')) # format caption of plot
-```
